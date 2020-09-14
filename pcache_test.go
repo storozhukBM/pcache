@@ -1,56 +1,44 @@
+// +build !race
+
 package pcache_test
 
 import (
-	"fmt"
 	"github.com/storozhukBM/pcache"
-	"math/rand"
-	"sync/atomic"
+	"math"
+	"reflect"
 	"testing"
-	"time"
 )
 
-func TestPCache_Get(t *testing.T) {
-	hits := uint64(0)
-	accesses := uint64(0)
+func TestConcurrentHitRatioTestNoRace(t *testing.T) {
+	expectedRationWithoutRaceDetector := 0.8
+	ratio := runConcurrentHitRatioTest()
+	t.Logf("act ratio: %+v", ratio)
+	eq(t, true, math.Abs(ratio-expectedRationWithoutRaceDetector) < 0.01)
+}
 
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-			cAccesses := atomic.LoadUint64(&accesses)
-			cHits := atomic.LoadUint64(&hits)
-			fmt.Printf(
-				"accesses: %12d; hits: %12d; delta: %6d; ratio: %.9f; \n",
-				cAccesses, cHits, cAccesses-cHits, float64(cHits)/float64(cAccesses),
-			)
-		}
-	}()
-	keys := []pcache.Key{
-		{File: "k1", Line: 1},
-		{File: "k2", Line: 1},
-		{File: "k3", Line: 1},
-		{File: "k4", Line: 1},
-		{File: "k5", Line: 1},
-		{File: "k6", Line: 1},
-	}
-	cache := pcache.NewPCache(5)
-	for i := 0; i < 16; i++ {
-		go func() {
-			rnd := rand.New(rand.NewSource(time.Now().Unix()))
-			for {
-				atomic.AddUint64(&accesses, 1)
-				k := keys[rnd.Intn(6)]
-				v, ok := cache.Get(k)
-				if !ok {
-					cache.Set(k, "v")
-					continue
-				}
-				if v != "v" {
-					t.Fatalf("unexpected value: %v", v)
-				}
-				atomic.AddUint64(&hits, 1)
-			}
-		}()
+func TestPCache(t *testing.T) {
+	cache := pcache.NewPCache(10)
+
+	{
+		v, ok := cache.Load("k1")
+		eq(t, false, ok)
+		eq(t, nil, v)
 	}
 
-	time.Sleep(100 * time.Second)
+	{
+		cache.Store("k1", "value1")
+		v, ok := cache.Load("k1")
+		eq(t, true, ok)
+		eq(t, "value1", v)
+	}
+}
+
+func eq(t *testing.T, exp interface{}, act interface{}) {
+	t.Helper()
+	if reflect.DeepEqual(exp, act) {
+		return
+	}
+	t.Logf("exp: %T=`%+v`", exp, exp)
+	t.Logf("act: %T=`%+v`", act, act)
+	t.Fatalf("assert failed")
 }
