@@ -2,6 +2,7 @@ package pcache_test
 
 import (
 	"fmt"
+	"github.com/dgraph-io/ristretto"
 	"github.com/storozhukBM/pcache"
 	"hash/maphash"
 	"math/rand"
@@ -17,6 +18,15 @@ type cache interface {
 }
 
 var workerSets = []int{1, 2, 4, 8, 12, 16, 22, 28, 32}
+
+func BenchmarkRistrettoLoadStore(b *testing.B) {
+	for _, r := range workerSets {
+		cache := newRistrettoCache(1000)
+		b.Run(fmt.Sprintf("w-%v", r), func(b *testing.B) {
+			benchLoadStore(b, r, cache)
+		})
+	}
+}
 
 func BenchmarkPCacheLoadStore(b *testing.B) {
 	for _, r := range workerSets {
@@ -188,4 +198,26 @@ func (m *mutexMapCache) Store(key string, value interface{}) {
 		}
 		idx++
 	}
+}
+
+type RistrettoCache struct {
+	c *ristretto.Cache
+}
+
+func (r *RistrettoCache) Load(key string) (interface{}, bool) {
+	val, ok := r.c.Get(key)
+	return val, ok
+}
+
+func (r *RistrettoCache) Store(key string, value interface{}) {
+	r.c.Set(key, value, 1)
+}
+
+func newRistrettoCache(size int) *RistrettoCache {
+	newCache, _ := ristretto.NewCache(&ristretto.Config{
+		NumCounters: int64(size * 10),
+		MaxCost:     int64(size),
+		BufferItems: 64,
+	})
+	return &RistrettoCache{c: newCache}
 }
