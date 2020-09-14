@@ -20,8 +20,6 @@ func runConcurrentHitRatioTest() float64 {
 	cache := pcache.NewPCache(4)
 	keys := []string{"1", "2", "3", "4", "5"}
 
-	sync.Map{}
-
 	workers := 16
 	iterations := 1000
 
