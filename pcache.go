@@ -12,6 +12,14 @@ type cacheStripe struct {
 
 // PCache is safe for concurrent use cache that tries to keep data local for the goroutine
 // and reduce synchronization overhead.
+//
+// Due to its implementation specifics,
+// in some edge cases, PCache can potentially restore previously-stored items after eviction,
+// so please take into account that it is possible and valid to observe "old" values of the specific key.
+// While this behavior is unconventional, it is totally usable for immutable key-value pairs,
+// keys that will always resolve into the same value,
+// and just in cases when it is easy for you to identify that the value is old and drop it or set to the new one.
+//
 // All operations run in amortized constant time.
 // PCache does its best to cache items inside and do as little synchronization as possible
 // but since it is cache, there is no guarantee that PCache won't evict your item after Store.

@@ -3,6 +3,15 @@
 
 `PCache` does its best to cache items inside and do as little synchronization as possible,
  but since it is cache, there is no guarantee that `PCache` won't evict your item after Store.
+ 
+ Due to its implementation specifics, in some edge cases, 
+  PCache can potentially restore previously-stored items after eviction, so please take into account that
+  **it is possible and valid to observe "old" values of the specific key**. 
+  While this behavior is unconventional, it is totally usable for:
+   - immutable key-value pairs
+   - keys that will always resolve into the same value
+   - cases when it is easy for you to identify that
+    the value is old and drop it or set to the new one
 
 `PCache` eviction policy is based on GC cycles, so it can evict all items from time to time.
 
