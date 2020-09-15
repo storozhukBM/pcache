@@ -1,5 +1,5 @@
 # PCache
-`PCache` is goroutine local cache that is safe for concurrent use.
+`PCache` Cache that tries to keep data local for the goroutine and reduce synchronization overhead but keep it is safe for concurrent use.
 
 `PCache` does its best to cache items inside and do as little synchronization as possible,
  but since it is cache, there is no guarantee that `PCache` won't evict your item after Store.
