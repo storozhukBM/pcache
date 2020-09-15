@@ -7,8 +7,7 @@ import (
 type cache map[string]interface{}
 
 type cacheStripe struct {
-	deletionProbeIdx int
-	cache            cache
+	cache cache
 }
 
 // PCache is safe for concurrent use, goroutine local cache.
@@ -21,16 +20,14 @@ type cacheStripe struct {
 //
 // The zero PCache is invalid. Use NewPCache method to create PCache.
 type PCache struct {
-	maxSize               int
-	deletionProbeBoundary int
-	pool                  *sync.Pool
+	maxSize int
+	pool    *sync.Pool
 }
 
 // NewPCache creates PCache with maxSizePerGoroutine.
 func NewPCache(maxSizePerGoroutine uint) *PCache {
 	return &PCache{
-		maxSize:               int(maxSizePerGoroutine),
-		deletionProbeBoundary: min(8, int(maxSizePerGoroutine)),
+		maxSize: int(maxSizePerGoroutine),
 		pool: &sync.Pool{
 			New: func() interface{} {
 				return &cacheStripe{
@@ -58,24 +55,8 @@ func (p *PCache) Store(key string, value interface{}) {
 	if len(stripe.cache) <= p.maxSize {
 		return
 	}
-
-	stripe.deletionProbeIdx++
-	if stripe.deletionProbeIdx >= p.deletionProbeBoundary {
-		stripe.deletionProbeIdx = 0
-	}
-	idx := 0
 	for k := range stripe.cache {
-		if idx == stripe.deletionProbeIdx {
-			delete(stripe.cache, k)
-			break
-		}
-		idx++
+		delete(stripe.cache, k)
+		break
 	}
-}
-
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
 }

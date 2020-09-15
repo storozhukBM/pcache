@@ -2,13 +2,14 @@ package pcache_test
 
 import (
 	"fmt"
-	"github.com/storozhukBM/pcache"
 	"hash/maphash"
 	"math/rand"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
+
+	"github.com/storozhukBM/pcache"
 )
 
 type cache interface {
@@ -80,10 +81,8 @@ func benchLoadStore(b *testing.B, workers int, cache cache) {
 }
 
 type stripe struct {
-	m                     sync.RWMutex
-	deletionProbeIdx      int
-	deletionProbeBoundary int
-	store                 map[string]interface{}
+	m     sync.RWMutex
+	store map[string]interface{}
 }
 
 type stripedMapCache struct {
@@ -98,10 +97,8 @@ func newStripedMapCache(sizePerGoroutine uint) *stripedMapCache {
 	}
 	for i := 0; i < 64; i++ {
 		cache.stripes = append(cache.stripes, &stripe{
-			m:                     sync.RWMutex{},
-			deletionProbeIdx:      0,
-			deletionProbeBoundary: 8,
-			store:                 make(map[string]interface{}),
+			m:     sync.RWMutex{},
+			store: make(map[string]interface{}),
 		})
 	}
 	return cache
@@ -130,35 +127,23 @@ func (m *stripedMapCache) Store(key string, value interface{}) {
 	if len(stripe.store) <= m.sizePerGoroutine {
 		return
 	}
-	stripe.deletionProbeIdx++
-	if stripe.deletionProbeIdx >= stripe.deletionProbeBoundary {
-		stripe.deletionProbeIdx = 0
-	}
-	idx := 0
 	for k := range stripe.store {
-		if idx == stripe.deletionProbeIdx {
-			delete(stripe.store, k)
-			break
-		}
-		stripeIdx++
+		delete(stripe.store, k)
+		break
 	}
 }
 
 type mutexMapCache struct {
-	m                     sync.RWMutex
-	sizePerGoroutine      int
-	deletionProbeIdx      int
-	deletionProbeBoundary int
-	store                 map[string]interface{}
+	m                sync.RWMutex
+	sizePerGoroutine int
+	store            map[string]interface{}
 }
 
 func newMutexCache(sizePerGoroutine uint) *mutexMapCache {
 	return &mutexMapCache{
-		m:                     sync.RWMutex{},
-		sizePerGoroutine:      int(sizePerGoroutine),
-		deletionProbeIdx:      0,
-		deletionProbeBoundary: 8,
-		store:                 make(map[string]interface{}),
+		m:                sync.RWMutex{},
+		sizePerGoroutine: int(sizePerGoroutine),
+		store:            make(map[string]interface{}),
 	}
 }
 
@@ -176,16 +161,8 @@ func (m *mutexMapCache) Store(key string, value interface{}) {
 	if len(m.store) <= m.sizePerGoroutine {
 		return
 	}
-	m.deletionProbeIdx++
-	if m.deletionProbeIdx >= m.deletionProbeBoundary {
-		m.deletionProbeIdx = 0
-	}
-	idx := 0
 	for k := range m.store {
-		if idx == m.deletionProbeIdx {
-			delete(m.store, k)
-			break
-		}
-		idx++
+		delete(m.store, k)
+		break
 	}
 }
