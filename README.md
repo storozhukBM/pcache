@@ -1,4 +1,4 @@
-# PCache
+# PCache  [![Build Status](https://github.com/storozhukBM/pcache/workflows/build/badge.svg)](https://github.com/storozhukBM/pcache/actions)  [![Go Report Card](https://goreportcard.com/badge/github.com/storozhukBM/pcache)](https://goreportcard.com/report/github.com/storozhukBM/pcache) [![PkgGoDev](https://pkg.go.dev/badge/github.com/storozhukBM/pcache)](https://pkg.go.dev/github.com/storozhukBM/pcache)
 `PCache` Cache that tries to keep data local for the goroutine and reduce synchronization overhead but keep it is safe for concurrent use.
 
 `PCache` does its best to cache items inside and do as little synchronization as possible,
