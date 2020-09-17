@@ -9,8 +9,8 @@ import (
 
 func TestConcurrentHitRatioTest(t *testing.T) {
 	ratio := runConcurrentHitRatioTest()
-	t.Logf("act ratio: %+v", ratio)
 	if ratio < 0.1 {
+		t.Logf("act ratio: %+v", ratio)
 		t.Fatalf("even with race detector enabled ration should be 0.1 was: %v", ratio)
 	}
 }

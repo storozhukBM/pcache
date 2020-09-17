@@ -12,8 +12,10 @@ import (
 func TestConcurrentHitRatioTestNoRace(t *testing.T) {
 	expectedRationWithoutRaceDetector := 0.8
 	ratio := runConcurrentHitRatioTest()
-	t.Logf("act ratio: %+v", ratio)
-	eq(t, true, math.Abs(ratio-expectedRationWithoutRaceDetector) < 0.01)
+	if math.Abs(ratio-expectedRationWithoutRaceDetector) > 0.01 {
+		t.Logf("act ratio: %+v", ratio)
+		t.Fatalf("actual ratio is too small: %v", ratio)
+	}
 }
 
 func TestPCache(t *testing.T) {
