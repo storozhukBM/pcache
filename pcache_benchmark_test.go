@@ -81,8 +81,10 @@ func benchLoadStore(b *testing.B, workers int, cache cache) {
 }
 
 type stripe struct {
+	pad1  [64]byte
 	m     sync.RWMutex
 	store map[string]interface{}
+	pad2  [32]byte
 }
 
 type stripedMapCache struct {
