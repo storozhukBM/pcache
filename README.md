@@ -27,4 +27,4 @@ You can import it as a library via Go modules or copy-paste `pcache.go` file
 
 ## Benches
 
-<img width="1914" alt="Screenshot 2020-09-14 at 23 25 26" src="https://user-images.githubusercontent.com/3532750/93144547-26aaf000-f6e2-11ea-99ec-cd8f43c20cec.png">
+<img width="1609" alt="Screenshot 2020-10-17 at 20 13 55" src="https://user-images.githubusercontent.com/3532750/96351739-4e142480-10b5-11eb-9509-78da3c9ef163.png">
